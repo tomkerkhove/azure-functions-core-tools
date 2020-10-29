@@ -245,25 +245,6 @@ namespace Azure.Functions.Cli.Kubernetes
             return (scaledobject != null ? result.Append(scaledobject) : result, resultantFunctionKeys);
         }
 
-        private static IDictionary<string, string> GetFunctionKeys(IDictionary<string, string> currentImageFuncKeys, IDictionary<string, string> existingFuncKeys)
-        {
-            if ((currentImageFuncKeys == null || !currentImageFuncKeys.Any())
-                || (existingFuncKeys == null || !existingFuncKeys.Any()))
-            {
-                return currentImageFuncKeys;
-            }
-
-            //The function keys that doesn't exist in Kubernetes yet
-            IDictionary<string, string> funcKeys = currentImageFuncKeys.Except(existingFuncKeys, new KeyBasedDictionaryComparer()).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-            //Merge the new keys with the keys that already exist in kubernetes
-            foreach (var commonKey in existingFuncKeys.Intersect(currentImageFuncKeys, new KeyBasedDictionaryComparer()))
-            {
-                funcKeys.Add(commonKey);
-            }
-
-            return funcKeys;
-        }
-
         private async static Task<IDictionary<string, string>> GetExistingFunctionKeys(string keysSecretCollectionName, string @namespace)
         {
             if (string.IsNullOrWhiteSpace(keysSecretCollectionName)
@@ -598,71 +579,6 @@ namespace Azure.Functions.Cli.Kubernetes
                     Namespace = @namespace
                 },
                 Data = secrets
-            };
-        }
-
-        public static ServiceAccountV1 GetServiceAccount(string name, string @namespace)
-        {
-            return new ServiceAccountV1
-            {
-                ApiVersion = "v1",
-                Kind = "ServiceAccount",
-                Metadata = new ObjectMetadataV1
-                {
-                    Name = name,
-                    Namespace = @namespace
-                }
-            };
-        }
-
-        public static RoleV1 GetSecretManagerRole(string name, string @namespace)
-        {
-            return new RoleV1
-            {
-                ApiVersion = "rbac.authorization.k8s.io/v1",
-                Kind = "Role",
-                Metadata = new ObjectMetadataV1
-                {
-                    Name = name,
-                    Namespace = @namespace
-                },
-                Rules = new RuleV1[]
-                {
-                    new RuleV1
-                    {
-                        ApiGroups = new string[]{""},
-                        Resources = new string[]{"secrets", "configMaps"},
-                        Verbs = new string[]{ "get", "list", "watch", "create", "update", "patch", "delete" }
-                    }
-                }
-            };
-        }
-
-        public static RoleBindingV1 GetRoleBinding(string name, string @namespace, string refRoleName, string subjectName)
-        {
-            return new RoleBindingV1
-            {
-                ApiVersion = "rbac.authorization.k8s.io/v1",
-                Kind = "RoleBinding",
-                Metadata = new ObjectMetadataV1
-                {
-                    Name = name,
-                    Namespace = @namespace
-                },
-                RoleRef = new RoleSubjectV1
-                {
-                    ApiGroup = "rbac.authorization.k8s.io",
-                    Kind = "Role",
-                    Name = refRoleName
-                },
-                Subjects = new RoleSubjectV1[]
-                {
-                    new RoleSubjectV1
-                    {
-                        Kind = "ServiceAccount",
-                        Name = subjectName
-                    }
-                }
             };
         }
 
