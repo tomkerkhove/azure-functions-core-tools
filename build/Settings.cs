@@ -20,9 +20,9 @@ namespace Build
                 : value;
         }
 
-        public const string ItemTemplatesVersion = "2.1.1579";
-        public const string ProjectTemplatesVersion = "2.1.1579";
-        public const string TemplateJsonVersion = "2.1.1579";
+        public const string ItemTemplatesVersion = "3.1.1582";
+        public const string ProjectTemplatesVersion = "3.1.1582";
+        public const string TemplateJsonVersion = "3.1.1582";
 
         public static readonly string SrcProjectPath = Path.GetFullPath("../src/Azure.Functions.Cli/");
 
@@ -36,32 +36,55 @@ namespace Build
 
         public static readonly string DurableFolder = Path.Combine(TestProjectPath, "Resources", "DurableTestFolder");
 
-        public static readonly string[] TargetRuntimes = new[] { "win-x86", "win-x64", "linux-x64", "osx-x64", "no-runtime", "min.win-x86", "min.win-x64" };
+        public static readonly string[] TargetRuntimes = new[] {"min.win-x86", "min.win-x64", "linux-x64", "osx-x64", "no-runtime", "win-x86", "win-x64" };
 
         public static readonly Dictionary<string, string> RuntimesToOS = new Dictionary<string, string>
         {
-            { "win-x86", "Windows" },
-            { "win-x64", "Windows" },
-            { "linux-x64", "Linux" },
-            { "osx-x64", "Mac" },
-            { "no-runtime", "Linux" },
-            { "min.win-x86", "Windows" },
-            { "min.win-x64", "Windows" },
+            { "win-x86", "WINDOWS" },
+            { "win-x64", "WINDOWS" },
+            { "linux-x64", "LINUX" },
+            { "osx-x64", "OSX" },
+            { "no-runtime", "LINUX" },
+            { "min.win-x86", "WINDOWS" },
+            { "min.win-x64", "WINDOWS" },
         };
 
         private static readonly string[] _winPowershellRuntimes = new[] { "win-x86", "win", "win10-x86", "win8-x86", "win81-x86", "win7-x86", "win-x64", "win10-x64", "win8-x64", "win81-x64", "win7-x64" };
-        public static readonly Dictionary<string, string[]> ToolsRuntimeToPowershellRuntimes = new Dictionary<string, string[]>
+        public static readonly Dictionary<string, Dictionary<string, string[]>> ToolsRuntimeToPowershellRuntimes = new Dictionary<string, Dictionary<string, string[]>>
         {
-            { "win-x86", _winPowershellRuntimes },
-            { "win-x64", _winPowershellRuntimes },
-            { "linux-x64", new [] { "linux", "linux-x64", "unix", "linux-musl-x64" } },
-            { "osx-x64", new [] { "osx", "unix" } },
-            { "no-runtime", new [] {
-                "win-x86", "win", "win10-x86", "win8-x86", "win81-x86", "win7-x86",
-                "win-x64", "win10-x64", "win8-x64", "win81-x64", "win7-x64", "linux",
-                "linux-x64", "unix", "linux-musl-x64",
-                "osx", "win-arm64", "win-arm", "linux-arm", "linux-arm64"
-            } }
+            {
+                "6",
+                new Dictionary<string, string[]>
+                {
+                    { "win-x86", _winPowershellRuntimes },
+                    { "win-x64", _winPowershellRuntimes },
+                    { "linux-x64", new [] { "linux", "linux-x64", "unix", "linux-musl-x64" } },
+                    { "osx-x64", new [] { "osx", "unix" } },
+                    { "no-runtime", new [] {
+                        "win-x86", "win", "win10-x86", "win8-x86", "win81-x86", "win7-x86",
+                        "win-x64", "win10-x64", "win8-x64", "win81-x64", "win7-x64", "linux",
+                        "linux-x64", "unix", "linux-musl-x64",
+                        "osx", "win-arm64", "win-arm", "linux-arm", "linux-arm64"
+                    } }
+                }
+            },
+            {
+                "7",
+                new Dictionary<string, string[]>
+                {
+                    { "win-x86", _winPowershellRuntimes },
+                    { "win-x64", _winPowershellRuntimes },
+                    { "linux-x64", new [] { "linux", "linux-x64", "unix", "linux-musl-x64" } },
+                    { "osx-x64", new [] { "osx", "osx-x64", "unix" } },
+                    { "no-runtime", new [] {
+                        "win-x86", "win", "win10-x86", "win8-x86", "win81-x86", "win7-x86",
+                        "win-x64", "win10-x64", "win8-x64", "win81-x64", "win7-x64", "linux",
+                        "linux-x64", "unix", "linux-musl-x64",
+                        "osx", "win-arm64", "win-arm", "linux-arm", "linux-arm64",
+                        "freebsd"
+                    } }
+                }
+            }
         };
 
         public static readonly string[] LanguageWorkers = new[] { "java", "powershell", "node", "python" };
@@ -161,6 +184,12 @@ namespace Build
                 "Marklio.Metadata.dll",
                 "Remotion.Linq.dll",
                 "System.IO.Abstractions.dll",
+                "dotnet-aspnet-codegenerator-design.dll",
+                "DotNetTI.BreakingChangeAnalysis.dll",
+                "Microsoft.Azure.KeyVault.*",
+                "Microsoft.AI.*.dll",
+                "Microsoft.Build.Framework.dll",
+                "Microsoft.Build.dll",
                 "Microsoft.CodeAnalysis.CSharp.Scripting.dll",
                 "Microsoft.CodeAnalysis.CSharp.Workspaces.dll",
                 "Microsoft.CodeAnalysis.Razor.dll",
@@ -168,7 +197,37 @@ namespace Build
                 "Microsoft.CodeAnalysis.VisualBasic.dll",
                 "Microsoft.CodeAnalysis.VisualBasic.Workspaces.dll",
                 "Microsoft.CodeAnalysis.Workspaces.dll",
+                "Microsoft.DotNet.PlatformAbstractions.dll",
+                "Microsoft.Extensions.DependencyModel.dll",
+                "Microsoft.Extensions.DiagnosticAdapter.dll",
+                "Microsoft.Extensions.Logging.ApplicationInsights.dll",
+                "Microsoft.Extensions.PlatformAbstractions.dll",
+                "Microsoft.Azure.Services.AppAuthentication.dll",
+                "Microsoft.IdentityModel.*",
+                "Microsoft.ApplicationInsights.*",
+                "Microsoft.Rest.ClientRuntime.*",
+                "Microsoft.VisualStudio.Web.CodeGenera*",
+                "Microsoft.WindowsAzure.Storage.dll",
+                "Microsoft.AspNetCore.*",
+                "NuGet.*.dll",
+                "protobuf-net.Core.dll",
+                "System.Composition.*",
+                "System.IdentityModel.Tokens.Jwt.dll",
+                "System.Interactive.Async.dll",
+                "System.Net.Http.Formatting.dll",
+                "System.Reactive.*.dll",
                 "YamlDotNet.dll",
+                "Marklio.Metadata.dll",
+                "Microsoft.Azure.Cosmos.Table.dll",
+                "Microsoft.Azure.DocumentDB.Core.dll",
+                "Microsoft.Azure.Storage.Blob.dll",
+                "Microsoft.Azure.Storage.Common.dll",
+                "Microsoft.Azure.Storage.File.dll",
+                "Microsoft.Azure.Storage.Queue.dll",
+                "Microsoft.OData.Core.dll",
+                "Microsoft.OData.Edm.dll",
+                "Microsoft.Spatial.dll",
+				"Mono.Posix.NETStandard.dll",
                 Path.Combine("tools", "python", "packapp", "distlib")
             };
         }

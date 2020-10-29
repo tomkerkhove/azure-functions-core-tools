@@ -1,23 +1,26 @@
-﻿using Azure.Functions.Cli.Common;
-using Azure.Functions.Cli.Diagnostics;
+﻿using Azure.Functions.Cli.Diagnostics;
+using Microsoft.Azure.WebJobs.Script.Configuration;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System.Threading.Tasks;
-using Xunit;
+using Microsoft.Extensions.Options;
+using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
+using Xunit;
+using System;
 
 namespace Azure.Functions.Cli.Tests
 {
     public class ColoredConsoleLoggerTests
     {
-        IConfigurationRoot _testConfiguration;
+        private IConfigurationRoot _testConfiguration;
 
         public ColoredConsoleLoggerTests()
         {
-            _testConfiguration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>
-                {
-                    { "AzureFunctionsJobHost:Logging:LogLevel:Host.Startup", "Debug" }
-                }).Build();
+            string defaultJson = "{\"version\": \"2.0\",\"Logging\": {\"LogLevel\": {\"Host.Startup\": \"Debug\"}}}";
+            _testConfiguration = new ConfigurationBuilder().AddJsonStream(new MemoryStream(Encoding.ASCII.GetBytes(defaultJson))).Build();
         }
 
         [Theory]
@@ -30,7 +33,6 @@ namespace Azure.Functions.Cli.Tests
         [InlineData("Host lock lease", false)]
         public void DoesMessageStartsWithWhiteListedPrefix_Tests(string formattedMessage, bool expected)
         {
-            
             ColoredConsoleLogger coloredConsoleLogger = new ColoredConsoleLogger("test", new LoggingFilterHelper(_testConfiguration, true), new LoggerFilterOptions());
             Assert.Equal(expected, coloredConsoleLogger.DoesMessageStartsWithAllowedLogsPrefix(formattedMessage));
         }
@@ -43,7 +45,7 @@ namespace Azure.Functions.Cli.Tests
         [InlineData("Host lock lease acquired by instance ID", true)]
         [InlineData("Host lock lease acquired by instance id", true)]
         [InlineData("Host lock lease", false)]
-        public void IsEnabled_Tests(string formattedMessage, bool expected)
+        public void DoesMessageStartsWithAllowedLogsPrefix_Tests(string formattedMessage, bool expected)
         {
             ColoredConsoleLogger coloredConsoleLogger = new ColoredConsoleLogger("test", new LoggingFilterHelper(_testConfiguration, true), new LoggerFilterOptions());
             Assert.Equal(expected, coloredConsoleLogger.DoesMessageStartsWithAllowedLogsPrefix(formattedMessage));

@@ -25,22 +25,13 @@ def main(*args):
         print(f"Does not support platform {platformSystem} yet.")
         return
 
-    # Build packages
-    # we create two packages 'azure-functions-core-tools-2' and 'azure-functions-core-tools'
-
-    # Build 'azure-functions-core-tools'
+    # at root
     initWorkingDir(constants.BUILDFOLDER, True)
     initWorkingDir(constants.ARTIFACTFOLDER)
 
-    print(f"Building package {constants.PACKAGENAME_BASE}...")
-    dist.preparePackage(constants.PACKAGENAME_BASE)
-
-    # Build 'azure-functions-core-tools-2'
-    initWorkingDir(constants.BUILDFOLDER, True)
-    initWorkingDir(constants.ARTIFACTFOLDER)
-
-    print(f"Building package {constants.PACKAGENAME_BASE}-2...")
-    dist.preparePackage(f"{constants.PACKAGENAME_BASE}-2")
+    # build package
+    print("Building package...")
+    dist.preparePackage()
 
 def initWorkingDir(dirName, clean = False):
     if clean:

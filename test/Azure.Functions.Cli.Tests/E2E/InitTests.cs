@@ -83,7 +83,7 @@ namespace Azure.Functions.Cli.Tests.E2E
                         ContentContains = new[]
                         {
                             "Microsoft.NET.Sdk.Functions",
-                            "v2"
+                            "v3"
                         }
                     }
                 }
@@ -132,7 +132,7 @@ namespace Azure.Functions.Cli.Tests.E2E
                     new FileResult
                     {
                         Name = "Dockerfile",
-                        ContentContains = new[] { $"FROM mcr.microsoft.com/azure-functions/{workerRuntime}:2.0" }
+                        ContentContains = new[] { $"FROM mcr.microsoft.com/azure-functions/{workerRuntime}:3.0" }
                     }
                 },
                 OutputContains = new[] { "Dockerfile" }
@@ -153,7 +153,7 @@ namespace Azure.Functions.Cli.Tests.E2E
                     new FileResult
                     {
                         Name = "Dockerfile",
-                        ContentContains = new[] { $"FROM mcr.microsoft.com/azure-functions/python:2.0-python{worker.Major}.{worker.Minor}" }
+                        ContentContains = new[] { $"FROM mcr.microsoft.com/azure-functions/python:3.0-python{worker.Major}.{worker.Minor}" }
                     }
                 },
                 OutputContains = new[] { "Dockerfile" }
@@ -172,7 +172,7 @@ namespace Azure.Functions.Cli.Tests.E2E
                     {
                         Name = "Dockerfile",
                         ContentNotContains = new[] { "dotnet publish" },
-                        ContentContains = new[] { $"FROM mcr.microsoft.com/azure-functions/dotnet:2.0" }
+                        ContentContains = new[] { $"FROM mcr.microsoft.com/azure-functions/dotnet:3.0" }
                     }
                 },
                 OutputContains = new[] { "Dockerfile" }
@@ -330,7 +330,7 @@ namespace Azure.Functions.Cli.Tests.E2E
                     new FileResult
                     {
                         Name = "Dockerfile",
-                        ContentContains = new[] { $"FROM mcr.microsoft.com/azure-functions/{workerRuntime}:2.0" }
+                        ContentContains = new[] { $"FROM mcr.microsoft.com/azure-functions/{workerRuntime}:3.0" }
                     }
                 },
                 OutputContains = new[] { "Dockerfile" }
@@ -353,7 +353,7 @@ namespace Azure.Functions.Cli.Tests.E2E
                     {
                         Name = "Dockerfile",
                         ContentNotContains = new[] { "dotnet publish" },
-                        ContentContains = new[] { $"FROM mcr.microsoft.com/azure-functions/dotnet:2.0" }
+                        ContentContains = new[] { $"FROM mcr.microsoft.com/azure-functions/dotnet:3.0" }
                     }
                 },
                 OutputContains = new[] { "Dockerfile" }
@@ -424,7 +424,7 @@ namespace Azure.Functions.Cli.Tests.E2E
                             "FUNCTIONS_WORKER_RUNTIME",
                             "powershell",
                             "FUNCTIONS_WORKER_RUNTIME_VERSION",
-                            "~6"
+                            "~7"
                         }
                     }
                 },

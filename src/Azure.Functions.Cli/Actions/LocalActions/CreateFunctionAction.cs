@@ -11,6 +11,7 @@ using Azure.Functions.Cli.Telemetry;
 using Colors.Net;
 using Fclp;
 using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.OData.UriParser;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using static Azure.Functions.Cli.Common.Constants;
@@ -41,8 +42,8 @@ namespace Azure.Functions.Cli.Actions.LocalActions
         {
             _templatesManager = templatesManager;
             _secretsManager = secretsManager;
-            _templates = new Lazy<IEnumerable<Template>>(() => { return _templatesManager.Templates.Result; });
             _initAction = new InitAction(_templatesManager, _secretsManager);
+            _templates = new Lazy<IEnumerable<Template>>(() => { return _templatesManager.Templates.Result; });
         }
 
         public override ICommandLineParserResult ParseArgs(string[] args)
@@ -101,7 +102,6 @@ namespace Azure.Functions.Cli.Actions.LocalActions
                 Language = _initAction.ResolvedLanguage;
             }
 
-            var templates = await _templatesManager.Templates;
 
             if (workerRuntime != WorkerRuntime.None && !string.IsNullOrWhiteSpace(Language))
             {

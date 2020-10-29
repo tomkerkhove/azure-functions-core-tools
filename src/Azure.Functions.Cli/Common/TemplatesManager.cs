@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net.Http;
 using System.Threading.Tasks;
 using Colors.Net;
 using Newtonsoft.Json;
@@ -10,7 +9,6 @@ using Azure.Functions.Cli.Actions.LocalActions;
 using Azure.Functions.Cli.ExtensionBundle;
 using System.Linq;
 using System.Reflection;
-using Azure.Functions.Cli.Helpers;
 
 namespace Azure.Functions.Cli.Common
 {

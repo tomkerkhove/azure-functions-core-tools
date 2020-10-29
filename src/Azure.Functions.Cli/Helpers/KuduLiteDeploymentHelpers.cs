@@ -57,7 +57,7 @@ namespace Azure.Functions.Cli.Helpers
             var latestDeployment = json.First();
             if (latestDeployment.TryGetValue("status", out string statusString))
             {
-                DeployStatus status = ConvertToDeploymentStatus(statusString);
+                DeployStatus status = ConvertToDeployementStatus(statusString);
                 if (status == DeployStatus.Building || status == DeployStatus.Deploying
                  || status == DeployStatus.Success || status == DeployStatus.Failed)
                 {
@@ -75,7 +75,7 @@ namespace Azure.Functions.Cli.Helpers
                 return DeployStatus.Unknown;
             }
 
-            return ConvertToDeploymentStatus(statusString);
+            return ConvertToDeployementStatus(statusString);
         }
 
         private static async Task<DateTime> DisplayDeploymentLog(HttpClient client, Site functionApp, string id, DateTime lastUpdate, Uri innerUrl = null, StringBuilder innerLogger = null)

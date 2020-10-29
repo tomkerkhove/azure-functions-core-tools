@@ -1,7 +1,7 @@
 #! /usr/bin/env python3.6
 
 # same for all different OSes
-PACKAGENAME_BASE = "azure-functions-core-tools"
+PACKAGENAME = "azure-functions-core-tools-3"
 CMD = "func"
 ARTIFACTFOLDER = "artifact"
 BUILDFOLDER = "build"

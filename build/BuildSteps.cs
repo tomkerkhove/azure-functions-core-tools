@@ -37,7 +37,7 @@ namespace Build
                 "https://www.myget.org/F/30de4ee06dd54956a82013fa17a3accb/",
                 "https://www.myget.org/F/xunit/api/v3/index.json",
                 "https://dotnet.myget.org/F/aspnetcore-dev/api/v3/index.json",
-                "https://azfunc.pkgs.visualstudio.com/e6a70c92-4128-439f-8012-382fe78d6396/_packaging/Microsoft.Azure.Functions.PowerShellWorker/nuget/v3/index.json",
+                "https://azfunc.pkgs.visualstudio.com/e6a70c92-4128-439f-8012-382fe78d6396/_packaging/Microsoft.Azure.Functions.PowerShellWorker/nuget/v3/index.json"
             }
             .Aggregate(string.Empty, (a, b) => $"{a} --source {b}");
 
@@ -98,34 +98,79 @@ namespace Build
             var minifiedRuntimes = Settings.TargetRuntimes.Where(r => r.StartsWith(Settings.MinifiedVersionPrefix));
             foreach (var runtime in Settings.TargetRuntimes.Except(minifiedRuntimes))
             {
-                var powershellRuntimePath = Path.Combine(Settings.OutputDir, runtime, "workers", "powershell", "runtimes");
-
-                var allKnownPowershellRuntimes = Settings.ToolsRuntimeToPowershellRuntimes.Values.SelectMany(x => x).Distinct().ToList();
-                var allFoundPowershellRuntimes = Directory.GetDirectories(powershellRuntimePath).Select(Path.GetFileName).ToList();
-
-                // Check to make sure any new runtime is categorizied properly and all the expected runtimes are available
-                if (allFoundPowershellRuntimes.Count != allKnownPowershellRuntimes.Count || !allKnownPowershellRuntimes.All(allFoundPowershellRuntimes.Contains))
+                var powershellWorkerRootPath = Path.Combine(Settings.OutputDir, runtime, "workers", "powershell");
+                var allPowershellWorkerPaths = Directory.GetDirectories(powershellWorkerRootPath);
+                foreach (var powershellWorkerPath in allPowershellWorkerPaths)
                 {
-                    throw new Exception($"Mismatch between classified Powershell runtimes and Powershell runtimes found. Classified runtimes are ${string.Join(", ", allKnownPowershellRuntimes)}." +
-                        $"{Environment.NewLine}Found runtimes are ${string.Join(", ", allFoundPowershellRuntimes)}");
-                }
+                    var powerShellVersion = Path.GetFileName(powershellWorkerPath);
+                    var powershellRuntimePath = Path.Combine(powershellWorkerPath, "runtimes");
 
-                // Delete all the runtimes that should not belong to the current runtime
-                var powershellForCurrentRuntime = Settings.ToolsRuntimeToPowershellRuntimes[runtime];
-                allFoundPowershellRuntimes.Except(powershellForCurrentRuntime).ToList().ForEach(r => Directory.Delete(Path.Combine(powershellRuntimePath, r), recursive: true));
+                    var allKnownPowershellRuntimes = Settings.ToolsRuntimeToPowershellRuntimes[powerShellVersion].Values.SelectMany(x => x).Distinct().ToList();
+                    var allFoundPowershellRuntimes = Directory.GetDirectories(powershellRuntimePath).Select(Path.GetFileName).ToList();
+
+                    // Check to make sure any new runtime is categorizied properly and all the expected runtimes are available
+                    if (allFoundPowershellRuntimes.Count != allKnownPowershellRuntimes.Count || !allKnownPowershellRuntimes.All(allFoundPowershellRuntimes.Contains))
+                    {
+                        throw new Exception($"Mismatch between classified Powershell runtimes and Powershell runtimes found for Powershell v{powerShellVersion}. Classified runtimes are ${string.Join(", ", allKnownPowershellRuntimes)}." +
+                            $"{Environment.NewLine}Found runtimes are ${string.Join(", ", allFoundPowershellRuntimes)}");
+                    }
+
+                    // Delete all the runtimes that should not belong to the current runtime
+                    var powershellForCurrentRuntime = Settings.ToolsRuntimeToPowershellRuntimes[powerShellVersion][runtime];
+                    allFoundPowershellRuntimes.Except(powershellForCurrentRuntime).ToList().ForEach(r => Directory.Delete(Path.Combine(powershellRuntimePath, r), recursive: true));
+                }
             }
 
             // Small test to ensure we have all the right runtimes at the right places
             foreach (var runtime in Settings.TargetRuntimes.Except(minifiedRuntimes))
             {
-                var powershellRuntimePath = Path.Combine(Settings.OutputDir, runtime, "workers", "powershell", "runtimes");
-                var currentPowershellRuntimes = Directory.GetDirectories(powershellRuntimePath).Select(Path.GetFileName).ToList();
-                var requiredPowershellRuntimes = Settings.ToolsRuntimeToPowershellRuntimes[runtime].Distinct().ToList();
-
-                if (currentPowershellRuntimes.Count != requiredPowershellRuntimes.Count() || !requiredPowershellRuntimes.All(currentPowershellRuntimes.Contains))
+                var powershellWorkerRootPath = Path.Combine(Settings.OutputDir, runtime, "workers", "powershell");
+                var allPowershellWorkerPaths = Directory.GetDirectories(powershellWorkerRootPath);
+                foreach (var powershellWorkerPath in allPowershellWorkerPaths)
                 {
-                    throw new Exception($"Mismatch between Expected Powershell runtimes ({string.Join(", ", requiredPowershellRuntimes)}) and Found Powershell runtimes " +
-                        $"({string.Join(", ", currentPowershellRuntimes)}) in the path {powershellRuntimePath}");
+                    var powerShellVersion = Path.GetFileName(powershellWorkerPath);
+                    var powershellRuntimePath = Path.Combine(powershellWorkerPath, "runtimes");
+                    var currentPowershellRuntimes = Directory.GetDirectories(powershellRuntimePath).Select(Path.GetFileName).ToList();
+                    var requiredPowershellRuntimes = Settings.ToolsRuntimeToPowershellRuntimes[powerShellVersion][runtime].Distinct().ToList();
+
+                    if (currentPowershellRuntimes.Count != requiredPowershellRuntimes.Count() || !requiredPowershellRuntimes.All(currentPowershellRuntimes.Contains))
+                    {
+                        throw new Exception($"Mismatch between Expected Powershell runtimes ({string.Join(", ", requiredPowershellRuntimes)}) and Found Powershell runtimes " +
+                            $"({string.Join(", ", currentPowershellRuntimes)}) in the path {powershellRuntimePath}");
+                    }
+                }
+            }
+        }
+
+        public static void FilterPythonRuntimes()
+        {
+            var minifiedRuntimes = Settings.TargetRuntimes.Where(r => r.StartsWith(Settings.MinifiedVersionPrefix));
+            foreach (var runtime in Settings.TargetRuntimes.Except(minifiedRuntimes))
+            {
+                var pythonWorkerPath = Path.Combine(Settings.OutputDir, runtime, "workers", "python");
+                var allPythonVersions = Directory.GetDirectories(pythonWorkerPath);
+
+                foreach (var pyVersionPath in allPythonVersions)
+                {
+                    var allOs = Directory.GetDirectories(pyVersionPath).Select(Path.GetFileName).ToList();
+                    bool atLeastOne = false;
+                    foreach (var os in allOs)
+                    {
+                        if (!string.Equals(Settings.RuntimesToOS[runtime], os, StringComparison.OrdinalIgnoreCase))
+                        {
+                            Directory.Delete(Path.Combine(pyVersionPath, os), recursive: true);
+                        }
+                        else
+                        {
+                            atLeastOne = true;
+                        }
+                    }
+
+                    if (!atLeastOne)
+                    {
+                        throw new Exception($"No Python worker matched the OS '{Settings.RuntimesToOS[runtime]}' for runtime '{runtime}'. " +
+                            $"Something went wrong.");
+                    }
                 }
             }
         }
@@ -159,6 +204,9 @@ namespace Build
                 Directory.CreateDirectory(dist);
                 FileHelpers.RecursiveCopy(Path.Combine(distLibDir, Directory.GetDirectories(distLibDir).First(), "distlib"), dist);
             }
+
+            File.Delete(distLibZip);
+            Directory.Delete(distLibDir, recursive: true);
         }
 
         public static void AddTemplatesNupkgs()
@@ -178,6 +226,29 @@ namespace Build
             foreach (var runtime in Settings.TargetRuntimes)
             {
                 FileHelpers.RecursiveCopy(templatesPath, Path.Combine(Settings.OutputDir, runtime, "templates"));
+            }
+
+            Directory.Delete(templatesPath, recursive: true);
+        }
+
+        public static void AddTemplatesJson()
+        {
+            var tempDirectoryPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            using (var client = new WebClient())
+            {
+                FileHelpers.EnsureDirectoryExists(tempDirectoryPath);
+                var zipFilePath = Path.Combine(tempDirectoryPath, "templates.zip");
+                client.DownloadFile(Settings.TemplatesJsonZip, zipFilePath);
+                FileHelpers.ExtractZipToDirectory(zipFilePath, tempDirectoryPath);
+            }
+
+            string templatesJsonPath = Path.Combine(tempDirectoryPath, "templates", "templates.json");
+            if (File.Exists(templatesJsonPath))
+            {
+                foreach (var runtime in Settings.TargetRuntimes)
+                {
+                    File.Copy(templatesJsonPath, Path.Combine(Settings.OutputDir, runtime, "templates", "templates.json"));
+                }
             }
         }
 
@@ -281,6 +352,7 @@ namespace Build
                 var unSignedPackages = GetUnsignedBinaries(targetDir);
                 if (unSignedPackages.Count() != 0)
                 {
+
                     var missingSignature = string.Join($",{Environment.NewLine}", unSignedPackages);
                     ColoredConsole.Error.WriteLine($"This files are missing valid signatures: {Environment.NewLine}{missingSignature}");
                     throw new Exception($"sigcheck.exe test failed. Following files are unsigned: {Environment.NewLine}{missingSignature}");
@@ -309,115 +381,6 @@ namespace Build
                         throw new Exception($"sigcheck.exe test failed. Following files are unsigned: {Environment.NewLine}{missingSignature}");
                     }
                 }
-            }
-        }
-
-
-        public static async Task UploadZipToSignAsync()
-        {
-            var storageConnection = Settings.SignInfo.AzureSigningConnectionString;
-            var storageAccount = CloudStorageAccount.Parse(storageConnection);
-            var blobClient = storageAccount.CreateCloudBlobClient();
-            var blobContainer = blobClient.GetContainerReference(Settings.SignInfo.AzureToSignContainerName);
-            await blobContainer.CreateIfNotExistsAsync();
-            foreach (var supportedRuntime in Settings.SignInfo.RuntimesToSign)
-            {
-                var targetDir = Path.Combine(Settings.OutputDir, supportedRuntime);
-
-                var toSignBlob = blobContainer.GetBlockBlobReference($"{Settings.SignInfo.ToSignZipName}-{supportedRuntime}");
-                await toSignBlob.UploadFromFileAsync(Path.Combine(targetDir, Settings.SignInfo.ToSignDir, Settings.SignInfo.ToSignZipName));
-
-                var toSignThirdPartyBlob = blobContainer.GetBlockBlobReference($"{Settings.SignInfo.ToSignThirdPartyName}-{supportedRuntime}");
-                await toSignThirdPartyBlob.UploadFromFileAsync(Path.Combine(targetDir, Settings.SignInfo.ToSignDir, Settings.SignInfo.ToSignThirdPartyName));
-            }
-        }
-
-        public static void EnqueueSignMessage()
-        {
-            EnqueueSignMessageAsync().Wait();
-        }
-
-        public static async Task EnqueueSignMessageAsync()
-        {
-            var storageConnection = Settings.SignInfo.AzureSigningConnectionString;
-            var storageAccount = CloudStorageAccount.Parse(storageConnection);
-            var queueClient = storageAccount.CreateCloudQueueClient();
-            var queue = queueClient.GetQueueReference(Settings.SignInfo.AzureSigningJobName);
-            await queue.CreateIfNotExistsAsync();
-
-            foreach (var supportedRuntime in Settings.SignInfo.RuntimesToSign)
-            {
-                var targetDir = Path.Combine(Settings.OutputDir, supportedRuntime);
-
-                var message = new CloudQueueMessage($"{Settings.SignInfo.Authenticode};{Settings.SignInfo.AzureToSignContainerName};{Settings.SignInfo.ToSignZipName}-{supportedRuntime}");
-                await queue.AddMessageAsync(message);
-
-                var thirdPartyMessage = new CloudQueueMessage($"{Settings.SignInfo.ThirdParty};{Settings.SignInfo.AzureToSignContainerName};{Settings.SignInfo.ToSignThirdPartyName}-{supportedRuntime}");
-                await queue.AddMessageAsync(thirdPartyMessage);
-            }
-        }
-
-        public static void WaitForSigning()
-        {
-            WaitForSigningAsync().Wait();
-        }
-
-        public static async Task WaitForSigningAsync()
-        {
-            var storageConnection = Settings.SignInfo.AzureSigningConnectionString;
-            var storageAccount = CloudStorageAccount.Parse(storageConnection);
-            var blobClient = storageAccount.CreateCloudBlobClient();
-            var blobContainer = blobClient.GetContainerReference(Settings.SignInfo.AzureSignedContainerName);
-            await blobContainer.CreateIfNotExistsAsync();
-
-            foreach (var supportedRuntime in Settings.SignInfo.RuntimesToSign)
-            {
-                var targetDir = Path.Combine(Settings.OutputDir, supportedRuntime);
-                Directory.CreateDirectory(Path.Combine(targetDir, Settings.SignInfo.SignedDir));
-                await PollAndDownloadFile($"{Settings.SignInfo.ToSignZipName}-{supportedRuntime}", Path.Combine(targetDir, Settings.SignInfo.SignedDir, Settings.SignInfo.ToSignZipName));
-                await PollAndDownloadFile($"{Settings.SignInfo.ToSignThirdPartyName}-{supportedRuntime}", Path.Combine(targetDir, Settings.SignInfo.SignedDir, Settings.SignInfo.ToSignThirdPartyName));
-            }
-
-            async Task PollAndDownloadFile(string fileName, string downloadTo)
-            {
-                var watch = new Stopwatch();
-                watch.Start();
-                CloudBlockBlob blob;
-                while (!await (blob = blobContainer.GetBlockBlobReference(fileName)).ExistsAsync())
-                {
-                    // Wait for 30 minutes and timeout
-                    if (watch.ElapsedMilliseconds > 1800000)
-                    {
-                        throw new TimeoutException("Timeout waiting for the signed blob");
-                    }
-                    await Task.Delay(5000);
-                }
-                await blob.DownloadToFileAsync(downloadTo, FileMode.OpenOrCreate);
-            }
-        }
-
-        public static void ReplaceSignedZipAndCleanup()
-        {
-            foreach (var supportedRuntime in Settings.SignInfo.RuntimesToSign)
-            {
-                var targetDir = Path.Combine(Settings.OutputDir, supportedRuntime);
-                var totalFilesBefore = Directory.GetFiles(targetDir, "*", SearchOption.AllDirectories).Length;
-                var autheticodeZip = Path.Combine(targetDir, Settings.SignInfo.SignedDir, Settings.SignInfo.ToSignZipName);
-                var thirdPartyZip = Path.Combine(targetDir, Settings.SignInfo.SignedDir, Settings.SignInfo.ToSignThirdPartyName);
-
-                FileHelpers.ExtractZipFileForce(autheticodeZip, targetDir);
-                FileHelpers.ExtractZipFileForce(thirdPartyZip, targetDir);
-
-                var totalFilesAfter = Directory.GetFiles(targetDir, "*", SearchOption.AllDirectories).Length;
-
-                // Sanity check to ensure that no files were lost during replace
-                if (totalFilesBefore != totalFilesAfter)
-                {
-                    throw new Exception("Number of files before signing and after signing mismatch.");
-                }
-
-                Directory.Delete(Path.Combine(targetDir, Settings.SignInfo.SignedDir), recursive: true);
-                Directory.Delete(Path.Combine(targetDir, Settings.SignInfo.ToSignDir), recursive: true);
             }
         }
 
@@ -482,13 +445,17 @@ namespace Build
                 ColoredConsole.WriteLine($"Creating {zipPath}");
                 ZipFile.CreateFromDirectory(path, zipPath, CompressionLevel.Optimal, includeBaseDirectory: false);
 
-                try
+                if (!runtime.StartsWith("win"))
                 {
-                    Directory.Delete(path, recursive: true);
-                }
-                catch
-                {
-                    ColoredConsole.Error.WriteLine($"Error deleting {path}");
+                    try
+                    {
+                        Directory.Delete(path, recursive: true);
+                    }
+                    catch
+                    {
+                        ColoredConsole.Error.WriteLine($"Error deleting {path}");
+                    }
+
                 }
 
                 ColoredConsole.WriteLine();

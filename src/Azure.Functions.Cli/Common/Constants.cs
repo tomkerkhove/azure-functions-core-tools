@@ -44,15 +44,14 @@ namespace Azure.Functions.Cli.Common
         public const string TelemetrySentinelFile = "telemetryDefaultOn.sentinel";
         public const string DefaultManagementURL = "https://management.azure.com/";
         public const string AzureManagementAccessToken = "AZURE_MANAGEMENT_ACCESS_TOKEN";
-        public const string AzureFunctionsEnvorinmentEnvironmentVariable = "AZURE_FUNCTIONS_ENVIRONMENT";
         public const string ExtensionBundleConfigPropertyName = "extensionBundle";
-        public const string AspNetCoreEnvironmentEnvironmentVariable = "ASPNETCORE_ENVIRONMENT";
         public const string UserCoreToolsDirectory = ".azure-functions-core-tools";
         public const string ManagedDependencyConfigPropertyName = "managedDependency";
         public const string CustomHandlerPropertyName = "customHandler";
-        public const string PowerShellWorkerDefaultVersion = "~6";
         public const string AuthLevelErrorMessage = "Unable to configure Authorization level. The selected template does not use Http Trigger";
         public const string HttpTriggerTemplateName = "HttpTrigger";
+        public const string PowerShellWorkerDefaultVersion = "~7";
+        public const string UserSecretsIdElementName = "UserSecretsId";
         public const string DisplayLogo = "FUNCTIONS_CORE_TOOLS_DISPLAY_LOGO";
         public const string AspNetCoreSupressStatusMessages = "ASPNETCORE_SUPPRESSSTATUSMESSAGES";
 
@@ -79,6 +78,10 @@ namespace Azure.Functions.Cli.Common
             public const string EitherPidOrAllMustBeSpecified = "Must specify either -a/--all or -p/--processId <Pid>";
             public const string ExtensionsNeedDotnet = "Extensions command requires dotnet on your path. Please make sure to install dotnet (.NET Core SDK) for your system from https://www.microsoft.com/net/download";
             public const string UnableToUpdateAppSettings = "Error updating Application Settings for the Function App for deployment.";
+            public const string WebJobsStorageNotFound = "Missing value for AzureWebJobsStorage in {0}. This is required for all triggers other than {1}. You can run 'func azure functionapp fetch-app-settings <functionAppName>' or specify a connection string in {2}.";
+            public const string WebJobsStorageNotFoundWithUserSecrets = "Missing value for AzureWebJobsStorage in {0} and User Secrets. This is required for all triggers other than {1}. You can run 'func azure functionapp fetch-app-settings <functionAppName>' or specify a connection string in {2} or User Secrets.";
+            public const string AppSettingNotFound = "Warning: Cannot find value named '{0}' in {1} that matches '{2}' property set on '{3}' in '{4}'. You can run 'func azure functionapp fetch-app-settings <functionAppName>' or specify a connection string in {5}.";
+            public const string AppSettingNotFoundWithUserSecrets = "Warning: Cannot find value named '{0}' in {1} or User Secrets that matches '{2}' property set on '{3}' in '{4}'. You can run 'func azure functionapp fetch-app-settings <functionAppName>' or specify a connection string in {5} or User Secrets.";
         }
 
         public static class Languages
@@ -118,6 +121,7 @@ namespace Azure.Functions.Cli.Common
         {
             public const string LinuxPython36ImageAmd64 = "mcr.microsoft.com/azure-functions/python:2.0.12493-python3.6-buildenv";
             public const string LinuxPython37ImageAmd64 = "mcr.microsoft.com/azure-functions/python:2.0.12763-python3.7-buildenv";
+            public const string LinuxPython38ImageAmd64 = "mcr.microsoft.com/azure-functions/python:3.0.13106-python3.8-buildenv";
         }
 
         public static class StaticResourcesNames
@@ -172,33 +176,27 @@ namespace Azure.Functions.Cli.Common
                     },
                     { "token",
                         new ExtensionPackage() {
-                        Name = "Microsoft.Azure.WebJobs.Extensions.AuthTokens",
-                        Version =  "1.0.0-beta6" }
+                        Name = "Microsoft.Azure.WebJobs.Extensions.AuthTokens", Version = "1.0.0-beta6" }
                     },
                     { "excel",
                         new ExtensionPackage() {
-                        Name = "Microsoft.Azure.WebJobs.Extensions.MicrosoftGraph",
-                        Version =  "1.0.0-beta6" }
+                        Name = "Microsoft.Azure.WebJobs.Extensions.MicrosoftGraph", Version = "1.0.0-beta6" }
                     },
                     { "outlook",
                         new ExtensionPackage() {
-                        Name = "Microsoft.Azure.WebJobs.Extensions.MicrosoftGraph",
-                        Version =  "1.0.0-beta6" }
+                        Name = "Microsoft.Azure.WebJobs.Extensions.MicrosoftGraph", Version = "1.0.0-beta6" }
                     },
                     { "graphwebhooksubscription",
                         new ExtensionPackage() {
-                        Name = "Microsoft.Azure.WebJobs.Extensions.MicrosoftGraph",
-                        Version =  "1.0.0-beta6" }
+                        Name = "Microsoft.Azure.WebJobs.Extensions.MicrosoftGraph", Version = "1.0.0-beta6" }
                     },
                     { "onedrive",
                         new ExtensionPackage() {
-                        Name = "Microsoft.Azure.WebJobs.Extensions.MicrosoftGraph",
-                        Version =  "1.0.0-beta6" }
+                        Name = "Microsoft.Azure.WebJobs.Extensions.MicrosoftGraph", Version = "1.0.0-beta6" }
                     },
                     { "graphwebhooktrigger",
                         new ExtensionPackage() {
-                        Name = "Microsoft.Azure.WebJobs.Extensions.MicrosoftGraph",
-                        Version =  "1.0.0-beta6" }
+                        Name = "Microsoft.Azure.WebJobs.Extensions.MicrosoftGraph", Version = "1.0.0-beta6" }
                     },
                     { "activitytrigger",
                         new ExtensionPackage() {
@@ -210,7 +208,7 @@ namespace Azure.Functions.Cli.Common
                     },
                     { "orchestrationclient",
                         new ExtensionPackage() {
-                        Name = "Microsoft.Azure.WebJobs.Extensions.DurableTask" }
+                        Name = "Microsoft.Azure.WebJobs.Extensions.DurableTask"}
                     },
                     { "eventgridtrigger",
                         new ExtensionPackage() {

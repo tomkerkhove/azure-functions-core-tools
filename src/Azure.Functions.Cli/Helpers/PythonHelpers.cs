@@ -94,7 +94,7 @@ namespace Azure.Functions.Cli.Helpers
         {
             if (pythonVersion?.Version == null)
             {
-                var message = "Could not find a Python version. Python 3.6.x or 3.7.x is recommended, and used in Azure Functions 2.x.";
+                var message = "Could not find a Python version. Python 3.6.x, 3.7.x or 3.8.x is recommended, and used in Azure Functions.";
                 if (errorIfNoVersion) throw new CliException(message);
                 ColoredConsole.WriteLine(WarningColor(message));
                 return;
@@ -102,22 +102,22 @@ namespace Azure.Functions.Cli.Helpers
 
             ColoredConsole.WriteLine(AdditionalInfoColor($"Found Python version {pythonVersion.Version} ({pythonVersion.ExecutablePath})."));
 
-            // Python 3.6 or 3.7 (supported)
-            if (pythonVersion.Major == 3 && (pythonVersion.Minor == 6 || pythonVersion.Minor == 7))
+            // Python 3.6 | 3.7 | 3.8 (supported)
+            if (IsVersionSupported(pythonVersion))
             {
                 return;
             }
 
-            // Python 3.x (but not 3.6 or 3.7), not recommended, may fail
+            // Python 3.x (but not 3.6 | 3.7 | 3.8), not recommended, may fail
             if (pythonVersion.Major == 3)
             {
-                if (errorIfNotSupported) throw new CliException($"Python 3.6.x or 3.7.x is required for the version of Azure Functions you are using (2.x). "
-                + "Please see if another version of Functions supports your version (https://aka.ms/functions-python-versions). Otherwise, please install Python 3.6 or 3.7 and use a virtual environment to switch to Python 3.6 or 3.7.");
-                ColoredConsole.WriteLine(WarningColor("Python 3.6.x or 3.7.x is recommended, and used in Azure Functions 2.x."));
+                if (errorIfNotSupported) throw new CliException($"Python 3.6.x, 3.7.x, 3.8.x is required for this operation. "
+                + "Please install Python 3.6, 3.7 or 3.8, and use a virtual environment to switch to Python 3.6, 3.7 or 3.8.");
+                ColoredConsole.WriteLine(WarningColor("Python 3.6.x, 3.7.x or 3.8.x is recommended, and used in Azure Functions."));
             }
 
             // No Python 3
-            var error = "Python 3.x (recommended version 3.6 or 3.7) is required.";
+            var error = "Python 3.x (recommended version 3.6, 3.7 or 3.8) is required.";
             if (errorIfNoVersion) throw new CliException(error);
             ColoredConsole.WriteLine(WarningColor(error));
         }
@@ -147,6 +147,7 @@ namespace Azure.Functions.Cli.Helpers
             var pythonGetVersionTask = GetVersion("python");
             var python36GetVersionTask = GetVersion("python3.6");
             var python37GetVersionTask = GetVersion("python3.7");
+            var python38GetVersionTask = GetVersion("python3.8");
 
             var versions = new List<WorkerLanguageVersionInfo>
             {
@@ -154,14 +155,15 @@ namespace Azure.Functions.Cli.Helpers
                 await python3GetVersionTask,
                 await pythonGetVersionTask,
                 await python36GetVersionTask,
-                await python37GetVersionTask
+                await python37GetVersionTask,
+                await python38GetVersionTask
             };
 
             // Highest preference -- Go through the list, if we find the first python 3.6 or python 3.7 worker, we prioritize that.
-            WorkerLanguageVersionInfo python36_37worker = versions.FirstOrDefault(w => (w?.Major == 3 && w?.Minor == 6) || (w?.Major == 3 && w?.Minor == 7));
-            if (python36_37worker != null)
+            WorkerLanguageVersionInfo recommendedPythonWorker = versions.FirstOrDefault(w => IsVersionSupported(w));
+            if (recommendedPythonWorker != null)
             {
-                _pythonVersionCache = python36_37worker;
+                _pythonVersionCache = recommendedPythonWorker;
                 return _pythonVersionCache;
             }
 
@@ -442,14 +444,7 @@ namespace Azure.Functions.Cli.Helpers
         private static async Task<string> ChoosePythonBuildEnvImage()
         {
             WorkerLanguageVersionInfo workerInfo = await GetEnvironmentPythonVersion();
-            if (workerInfo?.Major == 3 && workerInfo?.Minor == 7)
-            {
-                return Constants.DockerImages.LinuxPython37ImageAmd64;
-            }
-            else
-            {
-                return Constants.DockerImages.LinuxPython36ImageAmd64;
-            }
+            return GetBuildNativeDepsEnvironmentImage(workerInfo);
         }
 
         private static string CopyToTemp(IEnumerable<string> files, string rootPath)
@@ -466,6 +461,45 @@ namespace Azure.Functions.Cli.Helpers
                 FileSystemHelpers.Copy(file, Path.Combine(tmp, relativeFileName));
             }
             return tmp;
+        }
+
+        public static Task<string> GetDockerInitFileContent(WorkerLanguageVersionInfo info)
+        {
+            if (info?.Major == 3)
+            {
+                switch (info?.Minor)
+                {
+                    case 6:
+                        return StaticResources.DockerfilePython36;
+                    case 7:
+                        return StaticResources.DockerfilePython37;
+                    case 8:
+                        return StaticResources.DockerfilePython38;
+                }
+            }
+            return StaticResources.DockerfilePython36;
+        }
+
+        private static string GetBuildNativeDepsEnvironmentImage(WorkerLanguageVersionInfo info)
+        {
+            if (info?.Major == 3)
+            {
+                switch (info?.Minor)
+                {
+                    case 6:
+                        return Constants.DockerImages.LinuxPython36ImageAmd64;
+                    case 7:
+                        return Constants.DockerImages.LinuxPython37ImageAmd64;
+                    case 8:
+                        return Constants.DockerImages.LinuxPython38ImageAmd64;
+                }
+            }
+            return Constants.DockerImages.LinuxPython36ImageAmd64;
+        }
+
+        private static bool IsVersionSupported(WorkerLanguageVersionInfo info)
+        {
+            return (info?.Major == 3 && info?.Minor == 6) || (info?.Major == 3 && info?.Minor == 7) || (info?.Major == 3 && info?.Minor == 8);
         }
     }
 }

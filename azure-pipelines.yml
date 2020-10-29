@@ -5,13 +5,17 @@ pr:
     include:
     - master
     - dev
+    - v3.x
+    - release_3.0
 
 trigger:
   branches:
     include:
     - dev
     - master
-
+    - v3.x
+    - release_3.0
+    
 pool:
   vmImage: 'vs2017-win2016'
 
@@ -19,7 +23,6 @@ variables:
   devops_buildNumber: $[counter(format(''), 1500)]
   APPVEYOR_REPO_BRANCH: $[coalesce(variables['System.PullRequest.TargetBranch'], variables['Build.SourceBranchName'])]
   APPVEYOR_REPO_COMMIT: $(Build.SourceVersion)
-
 steps:
 - pwsh: |
     Write-Host "Target branch: '$(APPVEYOR_REPO_BRANCH)'"
@@ -27,6 +30,11 @@ steps:
 - task: NodeTool@0
   inputs:
     versionSpec: '10.x'
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: '3.1.x'
+    performMultiLevelLookup: true
 - task: NuGetToolInstaller@1
   inputs:
     versionSpec:
@@ -94,7 +102,7 @@ steps:
     SessionTimeout: '60'
     MaxConcurrency: '50'
     MaxRetryAttempts: '5'
-  condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/release/3.0')))
+  condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/release_3.0')))
 - task: EsrpCodeSigning@1
   displayName: 'Third party signing'
   inputs:
@@ -129,7 +137,7 @@ steps:
     SessionTimeout: '60'
     MaxConcurrency: '50'
     MaxRetryAttempts: '5'
-  condition: and(succeeded(),or (eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/release/3.0')))
+  condition: and(succeeded(),or (eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/release_3.0')))
 - pwsh: |
     .\repackageBinaries.ps1
   displayName: Repackage signed binaries
@@ -138,14 +146,57 @@ steps:
     BuildArtifactsStorage: $(BuildArtifactsStorage)
     DURABLE_STORAGE_CONNECTION: $(DURABLE_STORAGE_CONNECTION)
     TELEMETRY_INSTRUMENTATION_KEY: $(TELEMETRY_INSTRUMENTATION_KEY)
-  condition: and(succeeded(),or (eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/release/3.0')))
+  condition: and(succeeded(),or (eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/release_3.0')))
 - task: DotNetCoreCLI@2
   inputs:
     command: 'run'
     workingDirectory: '.\build'
     arguments: 'TestSignedArtifacts --signTest'
   displayName: 'Verify signed binaries'
-  condition: and(succeeded(),or (eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/release/3.0')))
+  condition: and(succeeded(), or (eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/release_3.0')))
+- pwsh: |
+    .\generateMsiFiles.ps1 -MsiGenBranches @("release_3.0") -CommitMessage '$(Build.SourceVersionMessage)'
+  env:
+    AzureBlobSigningConnectionString: $(AzureBlobSigningConnectionString)
+    BuildArtifactsStorage: $(BuildArtifactsStorage)
+    DURABLE_STORAGE_CONNECTION: $(DURABLE_STORAGE_CONNECTION)
+    TELEMETRY_INSTRUMENTATION_KEY: $(TELEMETRY_INSTRUMENTATION_KEY)
+  displayName: 'Generate MSI files'
+- task: EsrpCodeSigning@1
+  displayName: 'MSI Code Signing'
+  inputs:
+    ConnectedServiceName: 'ESRP Service'
+    FolderPath: '$(Build.Repository.LocalPath)\artifacts'
+    Pattern: '*.msi'
+    signConfigType: 'inlineSignParams'
+    inlineOperation: |
+      [
+          {
+            "KeyCode": "CP-230012",
+            "OperationCode": "SigntoolSign",
+            "Parameters": {
+              "OpusName": "Microsoft",
+              "OpusInfo": "http://www.microsoft.com",
+              "FileDigest": "/fd \"SHA256\"",
+              "PageHash": "/NPH",
+              "TimeStamp": "/tr \"http://rfc3161.gtm.corp.microsoft.com/TSS/HttpTspServer\" /td sha256"
+            },
+            "ToolName": "sign",
+            "ToolVersion": "1.0"
+          },
+          {
+            "KeyCode": "CP-230012",
+            "OperationCode": "SigntoolVerify",
+            "Parameters": {},
+            "ToolName": "sign",
+            "ToolVersion": "1.0"
+          }
+      ]
+    SessionTimeout: '60'
+    MaxConcurrency: '50'
+    MaxRetryAttempts: '5'
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/release_3.0'))
+
 - pwsh: |
     .\generateSha.ps1
   displayName: 'Generate sha files'
@@ -155,12 +206,10 @@ steps:
     testResultsFiles: '**/*.trx'
     failTaskOnFailedTests: true
   condition: succeededOrFailed()
-- task: CopyFiles@2
-  inputs:
-    SourceFolder: '$(Build.Repository.LocalPath)\artifacts'
-    Contents: 'Azure.Functions.Cli.*'
-    TargetFolder: '$(Build.ArtifactStagingDirectory)'
-    CleanTargetFolder: true
+- pwsh: |
+    Move-Item -Path '$(Build.Repository.LocalPath)\artifacts\Azure.Functions.Cli.*' -Destination '$(Build.ArtifactStagingDirectory)'
+    Move-Item -Path '$(Build.Repository.LocalPath)\artifacts\func-cli*.msi' -Destination '$(Build.ArtifactStagingDirectory)'
+  displayName: 'Move artifacts'
 - task: PublishBuildArtifacts@1
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
