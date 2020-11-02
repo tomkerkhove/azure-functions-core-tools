@@ -60,18 +60,6 @@ namespace Azure.Functions.Cli.Kubernetes
         internal static Task CreateNamespace(string @namespace)
             => KubectlHelper.RunKubectl($"create namespace {@namespace}", ignoreError: false, showOutput: true);
 
-        internal static string GetKedaResources(string @namespace)
-        {
-            var cmd = $"get {resourceTypeName} {resourceName} --namespace {@namespace}";
-            if (returnJsonOutput)
-            {
-                cmd = string.Concat(cmd, " -o json");
-            }
-
-            (string output, _, var exitCode) = await KubectlHelper.RunKubectl(cmd, ignoreError: true, showOutput: false);
-            return (output, exitCode == 0);
-        }
-
         internal async static Task<(IEnumerable<IKubernetesResource>, IDictionary<string, string>)> GetFunctionsDeploymentResources(
             string name,
             string imageName,
@@ -242,7 +230,7 @@ namespace Azure.Functions.Cli.Kubernetes
             }
 
             result = result.Concat(deployments).ToList();
-            return (scaledobject != null ? result.Append(scaledobject) : result, resultantFunctionKeys);
+            return (scaledObject != null ? result.Append(scaledObject) : result, resultantFunctionKeys);
         }
 
         private async static Task<IDictionary<string, string>> GetExistingFunctionKeys(string keysSecretCollectionName, string @namespace)

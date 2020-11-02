@@ -22,7 +22,7 @@ namespace Azure.Functions.Cli.Common
         public const string RequirementsTxt = "requirements.txt";
         public const string FunctionJsonFileName = "function.json";
         public const string HostJsonFileName = "host.json";
-        public const string ExtenstionsCsProjFile = "extensions.csproj";
+        public const string ExtensionsCsProjFile = "extensions.csproj";
         public const string DefaultVEnvName = "worker_env";
         public const string ExternalPythonPackages = ".python_packages";
         public const string FunctionsExtensionVersion = "FUNCTIONS_EXTENSION_VERSION";
@@ -44,7 +44,9 @@ namespace Azure.Functions.Cli.Common
         public const string TelemetrySentinelFile = "telemetryDefaultOn.sentinel";
         public const string DefaultManagementURL = "https://management.azure.com/";
         public const string AzureManagementAccessToken = "AZURE_MANAGEMENT_ACCESS_TOKEN";
+        public const string AzureFunctionsEnvironmentEnvironmentVariable = "AZURE_FUNCTIONS_ENVIRONMENT";
         public const string ExtensionBundleConfigPropertyName = "extensionBundle";
+        public const string AspNetCoreEnvironmentEnvironmentVariable = "ASPNETCORE_ENVIRONMENT";
         public const string UserCoreToolsDirectory = ".azure-functions-core-tools";
         public const string ManagedDependencyConfigPropertyName = "managedDependency";
         public const string CustomHandlerPropertyName = "customHandler";

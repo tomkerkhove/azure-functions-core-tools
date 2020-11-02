@@ -231,7 +231,7 @@ namespace Azure.Functions.Cli.Actions.HostActions
 
             // when running locally in CLI we want the host to run in debug mode
             // which optimizes host responsiveness
-            settings.TryAdd(Constants.AzureFunctionsEnvorinmentEnvironmentVariable, "Development");
+            settings.TryAdd(Constants.AzureFunctionsEnvironmentEnvironmentVariable, "Development");
             settings.TryAdd(Constants.AspNetCoreEnvironmentEnvironmentVariable, "Development");
             return settings;
         }
@@ -240,9 +240,9 @@ namespace Azure.Functions.Cli.Actions.HostActions
         {
             foreach (var secret in secrets)
             {
-                if (string.Equals(secret.Key, Constants.AzureFunctionsEnvorinmentEnvironmentVariable, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(secret.Key, Constants.AzureFunctionsEnvironmentEnvironmentVariable, StringComparison.OrdinalIgnoreCase))
                 {
-                    ColoredConsole.WriteLine($"{Constants.AzureFunctionsEnvorinmentEnvironmentVariable}: {secret.Value}");
+                    ColoredConsole.WriteLine($"{Constants.AzureFunctionsEnvironmentEnvironmentVariable}: {secret.Value}");
                     Environment.SetEnvironmentVariable(secret.Key, secret.Value, EnvironmentVariableTarget.Process);
                 }
                 else if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(secret.Key)))
@@ -383,7 +383,7 @@ namespace Azure.Functions.Cli.Actions.HostActions
             }
             return isPrecompiled;
         }
-                       
+
         internal static async Task CheckNonOptionalSettings(IEnumerable<KeyValuePair<string, string>> secrets, string scriptPath, bool userSecretsEnabled)
         {
             try
@@ -409,7 +409,7 @@ namespace Azure.Functions.Cli.Actions.HostActions
                     .Where(b => b.IndexOf("Trigger", StringComparison.OrdinalIgnoreCase) != -1)
                     .All(t => Constants.TriggersWithoutStorage.Any(tws => tws.Equals(t, StringComparison.OrdinalIgnoreCase)));
 
-                if (!skipAzureWebJobsStorageCheck && string.IsNullOrWhiteSpace(azureWebJobsStorage) && !allNonStorageTriggers)
+                if (string.IsNullOrWhiteSpace(azureWebJobsStorage) && !allNonStorageTriggers)
                 {
                     string errorMessage = userSecretsEnabled ? Constants.Errors.WebJobsStorageNotFoundWithUserSecrets : Constants.Errors.WebJobsStorageNotFound;
                     throw new CliException(string.Format(errorMessage,
