@@ -13,7 +13,7 @@ namespace Azure.Functions.Cli.Kubernetes.KEDA.V1
         public IKubernetesResource GetKubernetesResource(string name, string @namespace, TriggersPayload triggers,
             DeploymentV1Apps deployment, int? pollingInterval, int? cooldownPeriod, int? minReplicas, int? maxReplicas)
         {
-            return new ScaledObjectV1Alpha1
+            return new ScaledObjectKedaV1
             {
                 Metadata = new ObjectMetadataV1
                 {
