@@ -44,6 +44,10 @@ namespace Azure.Functions.Cli.Kubernetes.KEDA
                 // We use KEDA v2 as a default
                 return KedaVersion.v2;
             }
+            
+            var parsedJson = JToken.Parse(resourceInfo.Output);	
+            // TODO: Interpret app.kubernetes.io/version label	
+
             return KedaVersion.v1;
         }
     }
